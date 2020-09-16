@@ -1,0 +1,43 @@
+import numpy as np
+import scipy as sp
+import scipy.stats as st
+import utils.dixon as ud
+
+Pnmr = 0
+s = 0
+yuansu = {"C": 0.0008, "H": 0.00007, "F": 0.0000005, "N": 0.00007, "O": 0.0003, "S": 0.006, "Cl": 0.002}
+u_ix_istd = 0
+u_mstd = 0
+u_mx = 0
+u_Pstd = 0
+u_Mx = 0
+u_Mstd = 0
+u_Pnmr = 0
+Mx = 1
+nx = 2
+Pstd = 3
+Mstd = 4
+nstd = 5
+Ucrm = 6
+
+
+def pure_value(data):
+    global Mx, nx, Pstd, Mstd, nstd, Ucrm
+    global Pnmr
+    global s
+    for row in data:
+        Px = row[0] / row[1] * nstd / nx * Mx / Mstd * row[3] / row[2]
+        row.append(Px)
+    Pnmr = np.mean(row[-1])
+    s = np.std()
+
+
+def uncertainty(data):
+    MxE = {"C": 18, "H": 24, "F": 1, "N": 3, "O": 6, "S": 1, "Cl": 0}
+    MtdE = {"C": 18, "H": 24, "F": 1, "N": 3, "O": 6, "S": 1, "Cl": 0}
+    d = 2
+    global u_ix_istd, u_mstd, u_mx, u_Pstd, u_Mx, u_Mstd, u_Pnmr
+    u_ix_istd = s
+    u_mstd = u_mx = d / np.sqrt(3, 0.5)
+    u_Pstd = Ucrm / 2
+    u_Mx, u_Mstd =
