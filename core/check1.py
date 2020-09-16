@@ -74,3 +74,4 @@ def test_process(data):
     txa = np.mean(xa)
     global sa
     sa = np.std(s)
+u
