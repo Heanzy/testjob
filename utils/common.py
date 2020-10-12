@@ -14,5 +14,5 @@ def readTable(tableview:Tableview):
         if a:
             datafinal.append(a)
     print(datafinal)
-    return data
+    return datafinal
 
