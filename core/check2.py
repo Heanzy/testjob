@@ -25,40 +25,35 @@ class Check2:
         self.Ucrm = arg["Ucrm"]
         self.MxE = arg["MxE"]
         self.MstdE = arg["MstdE"]
-        print("arg:",arg)
-
+        self.TP = arg["TP"]
+        self.output = []
     def set_data(self,data):
         self.data = np.array(data)
         print("*****置入数据*****"+"\n",self.data)
 
     def pure_value(self,data):
-        for row in data:
-            Px = row[0] / row[1] * self.nstd / self.nx * self.Mx / self.Mstd * row[3] / row[2]
-            row.append(Px)
-        self.Pnmr = np.mean(data[0:][-1])
-        self.s = np.std()
+        for i,row in enumerate(data):
+            Px = row[0] / row[1] * self.nstd / self.nx * self.Mx / self.Mstd * row[3] / row[2]*self.Pstd
+            self.output.append(Px)
+        self.Pnmr = np.mean(self.output)
+        self.s = np.std(self.output,ddof=1)
         print("Pnmr:",self.Pnmr)
         print("s:",self.s)
+        return self.Pnmr,self.s,self.output
 
 
     def uncertainty(self,data):
-        d = 2
+        d = self.TP
         self.u_ix_istd = self.s
-        self.u_mstd = self.u_mx = d / np.sqrt(3, 0.5)
+        self.u_mstd = self.u_mx = d / pow(3, 0.5)
         self.u_Pstd = self.Ucrm / 2
-        self.u_Mx, self.u_Mstd = uu.um_value(self.MxE,self.MtdE,self.yuansu)
+        self.u_Mx, self.u_Mstd = uu.um_value(self.MxE,self.MstdE,self.yuansu)
         def temp():
-            return np.sqrt(np.sqrt(self.u_ix_istd/self.Pnmr,2)+
-                           np.sqrt(self.u_Mx/self.Mx,2)+
-                           np.sqrt(self.u_Mstd/self.Mstd)+
+            return pow(pow(self.u_ix_istd/self.Pnmr,2)+
+                           pow(self.u_Mx/self.Mx,2)+
+                           pow(self.u_Mstd/self.Mstd,2)+
                            self.u_Mx**2+
                            self.u_Mstd**2+
                            (self.u_Pstd/self.Pstd)**2,0.5)
         self.u_Pnmr = self.Pnmr*temp()
-        print("u_ix_istd:",self.u_ix_istd)
-        print("u_mstd:", self.u_mstd)
-        print("u_mx:", self.u_mx)
-        print("u_Pstd:", self.u_Pstd)
-        print("u_Mx:", self.u_Mx)
-        print("u_Mstd:", self.u_Mstd)
-        print("u_Pnmr:", self.u_Pnmr)
+        return self.u_ix_istd,self.u_mstd,self.u_mx,self.u_Pstd,self.u_Mx,self.u_Mstd,self.u_Pnmr

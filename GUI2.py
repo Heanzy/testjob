@@ -2,14 +2,17 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from Table import Tableview
+from PyQt5.QtGui import *
 from utils.common import readTable
-from core.Controller import run,run1
+from Controller import run1
 import sys
+from copyAction import selected_tb_text
+from common import readYuansu
 class GUI2MainWindow(QWidget):
     start_signal = pyqtSignal(Tableview,dict)
     def __init__(self):
         super(GUI2MainWindow,self).__init__()
-
+        self.initSignal()
         self.setObjectName("主窗口")
         self.setWindowTitle("check2")
         self.resize(700,600)
@@ -57,10 +60,16 @@ class GUI2MainWindow(QWidget):
         hlayout2.addWidget(self.UcrmQLine)
 
         self.tableView = Tableview()
-
+        self.tableView.model.setHorizontalHeaderLabels(["Ix","Istd","mx","mstd"])
         self.satrtButton = QtWidgets.QPushButton()
+        self.satrtButton.setText("开始")
 
         self.secondButton = QtWidgets.QPushButton()
+
+        #天平最小分度
+        self.TianPingLabel = QLabel()
+        self.TianPingLabel.setText("天平最小分度:")
+        self.TianPingLine = QLineEdit()
 
         #MxE分子式标签
         self.MxELabel = QLabel()
@@ -133,6 +142,10 @@ class GUI2MainWindow(QWidget):
         self.OtherLabel1.setText("其他")
         self.OtherlLine1 = QLineEdit()
 
+        hlayout5 = QHBoxLayout()
+        hlayout5.addWidget(self.TianPingLabel)
+        hlayout5.addWidget(self.TianPingLine)
+
         hlayout3 = QHBoxLayout()
         hlayout3.addWidget(self.CLabel)
         hlayout3.addWidget(self.CLine)
@@ -170,40 +183,86 @@ class GUI2MainWindow(QWidget):
         hlayout4.addWidget(self.OtherlLine1)
 
 
-
         self.satrtButton.clicked.connect(self.startSignal)
-        self.initSignal()
+
         self.vlayout = QVBoxLayout()
         self.vlayout.addLayout(hlayout1)
         self.vlayout.addLayout(hlayout2)
         self.vlayout.addWidget(self.tableView)
         self.vlayout.addWidget(self.satrtButton)
+        self.vlayout.addLayout(hlayout5)
         self.vlayout.addWidget(self.MxELabel)
         self.vlayout.addLayout(hlayout3)
         self.vlayout.addWidget(self.MstdELabel)
         self.vlayout.addLayout(hlayout4)
         self.vlayout.addWidget(self.secondButton)
         self.setLayout(self.vlayout)
-
         self.arg = {}
     def initSignal(self):
         self.start_signal.connect(run1)
     def startSignal(self):
         self.start_signal.emit(self.tableView,self.getarg())
-
     def getarg(self):
-        self.arg["Mx"] = float(self.MxQLine.text()) if self.MxQLine.text() else None
-        self.arg["nx"] =float(self.nxQLine.text()) if self.MxQLine.text() else None
-        self.arg["Pstd"] = float(self.PstdQLine.text()) if self.MxQLine.text() else None
-        self.arg["Mstd"] = float(self.MstdQLine.text()) if self.MxQLine.text() else None
-        self.arg["nstd"] = float(self.nstdQLine.text()) if self.MxQLine.text() else None
-        self.arg["Ucrm"] = float(self.UcrmQLine.text()) if self.MxQLine.text() else None
-        self.arg["MxE"] = None
-        self.arg["MstdE"] = None
+
+        self.arg["Mx"] = float(self.MxQLine.text()) if self.MxQLine.text() else 0
+        self.arg["nx"] =float(self.nxQLine.text()) if self.nxQLine.text() else 0
+        self.arg["Pstd"] = float(self.PstdQLine.text()) if self.PstdQLine.text() else 0
+        self.arg["Mstd"] = float(self.MstdQLine.text()) if self.MstdQLine.text() else 0
+        self.arg["nstd"] = float(self.nstdQLine.text()) if self.nstdQLine.text() else 0
+        self.arg["Ucrm"] = float(self.UcrmQLine.text()) if self.UcrmQLine.text() else 0
+        self.arg["TP"] = float(self.TianPingLine.text()) if self.TianPingLine.text() else 0
+        self.arg["MxE"],self.arg["MstdE"] = self.getyuansu()
         return self.arg
     def getyuansu(self):
-        pass
-
+        MxE = {}
+        MxE["C"] = int(self.CLine.text()) if self.CLine.text() else 0
+        MxE["H"] = int(self.HLine.text()) if self.HLine.text() else 0
+        MxE["O"] = int(self.OLine.text()) if self.OLine.text() else 0
+        MxE["N"] = int(self.NLine.text()) if self.NLine.text() else 0
+        MxE["S"] = int(self.SLine.text()) if self.SLine.text() else 0
+        MxE["F"] = int(self.FLine.text()) if self.FLine.text() else 0
+        MxE["Cl"] = int(self.ClLine.text()) if self.ClLine.text() else 0
+        if self.OtherlLine.text():
+            MxE.update(readYuansu(self.OtherlLine.text()))
+        MstdE = {}
+        MstdE["C"] = int(self.CLine1.text()) if self.CLine1.text() else 0
+        MstdE["H"] = int(self.HLine1.text()) if self.HLine1.text() else 0
+        MstdE["O"] = int(self.OLine1.text()) if self.OLine1.text() else 0
+        MstdE["N"] = int(self.NLine1.text()) if self.NLine1.text() else 0
+        MstdE["S"] = int(self.SLine1.text()) if self.SLine1.text() else 0
+        MstdE["F"] = int(self.FLine1.text()) if self.FLine1.text() else 0
+        MstdE["Cl"] = int(self.ClLine1.text()) if self.ClLine1.text() else 0
+        if self.OtherlLine1.text():
+            MstdE.update(readYuansu(self.OtherlLine1.text()))
+        return MxE,MstdE
+    def keyPressEvent(self, event):  # 重写键盘监听事件
+        # 监听 CTRL+C 组合键，实现复制数据到粘贴板
+        if (event.key() == Qt.Key_C) and QApplication.keyboardModifiers() == Qt.ControlModifier:
+            text = selected_tb_text(self.tableView)  # 获取当前表格选中的数据
+            if text:
+                try:
+                    clipboard = QApplication.clipboard()
+                    clipboard.setText(text)  # 复制到粘贴板
+                except BaseException as e:
+                    print(e)
+        if (event.key() == Qt.Key_V) and QApplication.keyboardModifiers() == Qt.ControlModifier:
+            clipboard = QApplication.clipboard()
+            rows = clipboard.text().split("\n")
+            for i,item in enumerate(rows):
+                rows[i] = item.split("\t")
+            indexes = self.tableView.selectedIndexes()
+            row = indexes[0].row()
+            colmn = indexes[0].column()
+            for row_item in rows:
+                for column in row_item:
+                    self.tableView.model.setItem(row,colmn,QStandardItem(column))
+                    colmn += 1
+                row += 1
+                colmn = indexes[0].column()
+    def warn(self):
+        QMessageBox.information(self,"提示","计算失败，请检查输入")
+    def success(self):
+        QMessageBox.information(self, "提示", "成功")
 
 
 
