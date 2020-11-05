@@ -17,7 +17,7 @@ class Check1:
         self.xa_pass_shapiro = True
         self.txa = 0
         self.ts = 0
-        self.output = []
+        self.output = {}
         self.tc = 0
     def set_data(self,data):
         self.data = np.array(data)
@@ -60,7 +60,7 @@ class Check1:
                 self.is_pass_shapiro[index] = False
                 continue
             else:
-                self.output.append([self.shapiro_wilk_test(row)[0],])
+                self.output[index] = [self.shapiro_wilk_test(row)[0],]
             while not self.dixon_test(row)[-1] and len(row) >= 6:
                 if not self.shapiro_wilk_test(row)[-1]:
                     print("本组数据不符合正太分布2")
